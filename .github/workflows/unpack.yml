@@ -10,42 +10,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Unpack archive and Live Scripts
+      - name: Inspect Stage-0 selection code
         run: |
-          rm -rf unpacked mlx_unpacked mlx_code
-          mkdir -p unpacked mlx_unpacked mlx_code
-          unzip -q PHDNN_LSQ_Framework_v75_PySR2_shared_initial_guesses_full.zip -d unpacked
-          for f in unpacked/run_demo_feynman_dimless.mlx unpacked/run_demo_single_generator_dynamic.mlx unpacked/run_demo_soft_saturated_lorenz96.mlx; do
-            if [ -f "$f" ]; then
-              b=$(basename "$f" .mlx)
-              mkdir -p "mlx_unpacked/$b"
-              unzip -q "$f" -d "mlx_unpacked/$b" || true
-            fi
-          done
-          python - <<'PY'
-          import os, xml.etree.ElementTree as ET
-          ns={'w':'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
-          for b in ['run_demo_feynman_dimless','run_demo_single_generator_dynamic','run_demo_soft_saturated_lorenz96']:
-              p=f'mlx_unpacked/{b}/matlab/document.xml'
-              if not os.path.exists(p):
-                  continue
-              root=ET.parse(p).getroot()
-              chunks=[]
-              for para in root.findall('.//w:p', ns):
-                  style=para.find('./w:pPr/w:pStyle',ns)
-                  if style is None or style.attrib.get('{%s}val'%ns['w'])!='code':
-                      continue
-                  text=''.join(t.text or '' for t in para.findall('.//w:t',ns))
-                  chunks.append(text)
-              with open(f'mlx_code/{b}.m','w',encoding='utf-8',newline='\n') as fh:
-                  fh.write('\n'.join(chunks))
-                  fh.write('\n')
-          PY
-          wc -l mlx_code/*.m || true
-      - name: Commit extracted files
+          mkdir -p inspection
+          {
+            echo '=== run_phdn_per_output_pysr_stage0.m ==='
+            grep -nEi 'merge_inner_restart_results_local|structureScore|machineError|pysrScore|native.*score|bestScore|selected.*score|selectionPolicy' unpacked/core/stage0/run_phdn_per_output_pysr_stage0.m || true
+            echo '=== train_official_pysr_baseline.m ==='
+            grep -nEi 'structureScore|machineError|pysrScore|native.*score|bestScore|selected.*score|selectionPolicy|outputSelections' unpacked/baselines/sr/train_official_pysr_baseline.m || true
+            echo '=== pysr_official_adapter.py ==='
+            grep -nEi 'structure_score|machine.*error|pysr.*score|native.*score|best_score|selected.*score|selection_policy|model_selection' unpacked/baselines/sr/pysr_official_adapter.py || true
+            echo '=== defaults ==='
+            grep -nEi 'structureScore|machineError|modelSelection|selectionPolicy' unpacked/core/phdnn_default_options.m unpacked/baselines/sr/sr_default_options.m || true
+          } > inspection/selection_grep.txt
+      - name: Commit report
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add unpacked mlx_unpacked mlx_code
-          git commit -m "Export Live Script code for inspection" || exit 0
+          git add inspection
+          git commit -m "Add Stage-0 selection inspection report" || exit 0
           git push
