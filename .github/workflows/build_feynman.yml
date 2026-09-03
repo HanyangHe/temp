@@ -1,0 +1,30 @@
+name: Build Feynman deliverables
+on:
+  push:
+    branches:
+      - chatgpt-unpack-feynman
+permissions:
+  contents: write
+jobs:
+  build:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          python tools/run_feynman_builder.py
+          python -m py_compile deliverables/baselines/sr/pysr_official_adapter.py
+          unzip -t deliverables/run_demo_feynman_dimless.mlx
+          zip -qr Feynman_original_PySR_score_update.zip deliverables
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add deliverables Feynman_original_PySR_score_update.zip
+          git commit -m "Build Feynman original PySR score update" || exit 0
+          git push
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Feynman_original_PySR_score_update
+          path: Feynman_original_PySR_score_update.zip
