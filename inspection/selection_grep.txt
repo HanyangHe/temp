@@ -1,0 +1,129 @@
+=== run_phdn_per_output_pysr_stage0.m ===
+58:        result.bestScoreExpressions = baseFit.outputExpressions;
+219:    srOpts.structureScoreEnable = options.pysr.structureScoreEnable;
+222:    srOpts.structureMachineErrorAbsMSEFloor = options.pysr.structureMachineErrorAbsMSEFloor;
+223:    srOpts.structureMachineErrorRelMSEFloor = options.pysr.structureMachineErrorRelMSEFloor;
+439:            srOpts.structureMachineErrorAbsMSEFloor, ...
+440:            srOpts.structureMachineErrorRelMSEFloor);
+584:    srResult = merge_inner_restart_results_local( ...
+624:        coreExpressions = getfield_default_local(srResult, 'bestScoreExpressionsPerOutput', {});
+636:    model.bestScoreExpressions = coreExpressions;
+649:    model.candidateRankingsByBestScore = getfield_default_local(srResult, 'candidateRankingsByBestScore', struct([]));
+650:    model.candidateRankingsByStructureScore = getfield_default_local(srResult, 'candidateRankingsByStructureScore', struct([]));
+673:    candidate = make_candidate_local(model, 'per_output_sindy_or_native_pysr_structure_score');
+682:    result.bestScoreExpressions = coreExpressions;
+687:    result.reason = 'per_output_sindy_bypass_and_native_multioutput_pysr_structure_score_completed';
+695:            if isempty(fieldnames(coreMeta)); coreMeta = selection_meta_local(model.outputSelections, j, 'bestScore'); end
+696:            fprintf(['  y%d selected core | structure score %.6g | Sval %.4f | Sfront %.4g (norm %.4f) | ', ...
+1273:        sel.bestScore = struct();
+1276:        if isfield(sel,'bestScoreRanking'); sel.bestScoreRanking = struct([]); end
+1277:        if isfield(sel,'structureScoreRanking'); sel.structureScoreRanking = struct([]); end
+1359:        bestScoreRows = getfield_default_local(selections(j), 'bestScoreRanking', struct([]));
+1360:        structureScoreRows = getfield_default_local(selections(j), 'structureScoreRanking', struct([]));
+1367:        print_candidate_table_local(bestScoreRows, ...
+1368:            'Selected-restart native PySR score ranking (restart-local rel. best)', requestedTopK);
+1369:        print_structure_candidate_table_local(structureScoreRows, ...
+1413:        pysrScore = getfield_default_local(rows(i), 'score', NaN);
+1417:            rankValue, valMSE, relBest, complexity, pysrScore, role, expression);
+1504:        'structureScoreEnable',true,'structureValidationMultiplier',4.0, ...
+1506:        'structureMachineErrorAbsMSEFloor',0, ...
+1507:        'structureMachineErrorRelMSEFloor',0, ...
+1527:    S.bestScoreExpressions = coreExpr;
+1530:    S.source = 'per_output_sindy_or_native_multioutput_soft_validation_structure_score_selection';
+1703:    template = struct('outputIndex',NaN,'core',struct(),'bestScore',struct(), ...
+1705:        'complexityRanking',struct([]),'bestScoreRanking',struct([]), ...
+1706:        'structureScoreRanking',struct([]),'candidateCount',0,'selectionMode','', ...
+1732:            selections(j).bestScore = core;
+1737:            selections(j).bestScoreRanking = core;
+1748:    merged.bestScoreExpressionsPerOutput = expressions; % backward-compatible alias
+1774:    merged.candidateRankingsByBestScore = remap_ranking_outputs_local( ...
+1775:        getfield_default_local(sr,'candidateRankingsByBestScore',struct([])),srIndices);
+1776:    merged.candidateRankingsByStructureScore = collect_structure_rankings_local(selections);
+1800:function merged = merge_inner_restart_results_local(restartResults, restartSeeds, restartTimes, data, pysrOptions)
+1801:%MERGE_INNER_RESTART_RESULTS_LOCAL Merge validation-ratio-qualified pools.
+1815:    useStructureScore = logical(getfield_default_local(pysrOptions, 'structureScoreEnable', true));
+1826:        pysrOptions, 'structureMachineErrorAbsMSEFloor', 0);
+1828:        pysrOptions, 'structureMachineErrorRelMSEFloor', 0);
+1977:            selectedCandidate.frontier_score_raw = ...
+1978:                candidate_structure_component_local(selectedCandidate,'frontier_score_raw');
+1979:            selectedCandidate.frontier_score_valid = ...
+1980:                isfinite(selectedCandidate.frontier_score_raw);
+1981:            selectedCandidate.frontier_score_normalized = 0.5;
+1982:            selectedCandidate.validation_soft_score = 1.0;
+1983:            selectedCandidate.structure_score = 1.0;
+2027:        elseif useStructureScore
+2029:            selectedCandidate.frontier_score_raw = frontierRaw(1);
+2030:            selectedCandidate.frontier_score_valid = isfinite(frontierRaw(1));
+2031:            selectedCandidate.frontier_score_normalized = frontierNormalized(1);
+2032:            selectedCandidate.validation_soft_score = validationSoft(1);
+2033:            selectedCandidate.structure_score = combined(1);
+2034:            selectedCandidate.selection_rule = 'machine_floor_aware_soft_validation_structure_score';
+2069:        selectedSelection.bestScore = selectedSelection.core; % backward-compatible field name
+2073:        elseif useStructureScore
+2074:            selectedSelection.selectionMode = 'machine_floor_aware_soft_validation_structure_score';
+2084:        selectedSelection.bestScoreRanking = relabel_restart_local_rows_local( ...
+2085:            getfield_default_local(selectedSelection,'bestScoreRanking',struct([])), selectedCandidate);
+2088:        selectedSelection.structureScoreRanking = structureRows;
+2091:            selectedSelection.structureScoreRanking(1).selection_role = 'final-structure-core';
+2112:    merged.bestScoreExpressionsPerOutput = selectedExpressions; % backward-compatible alias
+2116:    merged.candidateRankingsByStructureScore = collect_structure_rankings_local(selectedSelections);
+2132:    if useStructureScore
+2264:    exprA = getfield_default_local(a, 'bestScoreExpressionsPerOutput', {});
+2265:    exprB = getfield_default_local(b, 'bestScoreExpressionsPerOutput', {});
+2300:        rows = getfield_default_local(selections(j), 'structureScoreRanking', struct([]));
+2340:            if isempty(fieldnames(core)); core = getfield_default_local(selections(i), 'bestScore', struct()); end
+=== train_official_pysr_baseline.m ===
+219:    cfg.structure_score_enable = logical(getfield_default_local(srOpts, 'structureScoreEnable', false));
+223:        srOpts, 'structureMachineErrorAbsMSEFloor', 0);
+225:        srOpts, 'structureMachineErrorRelMSEFloor', 0);
+356:    resultSR.bestScoreExpressionsPerOutput = collect_selected_expressions_local(pyResult, 'selected_core');
+357:    resultSR.coreExpressionsPerOutput = resultSR.bestScoreExpressionsPerOutput;
+359:    resultSR.bestExpressionsPerOutput = resultSR.bestScoreExpressionsPerOutput;
+360:    resultSR.outputSelections = collect_output_selections_local(pyResult);
+363:    resultSR.candidateRankingsByBestScore = collect_candidate_rankings_local(pyResult, 'external_validation_ranked_by_best_score');
+364:    resultSR.candidateRankingsByStructureScore = collect_candidate_rankings_local(pyResult, 'external_validation_ranked_by_structure_score');
+485:        elseif any(strcmp(fieldName, {'selected_core','selected_best_score','selected_best'})) && isfield(outs(i), 'expression')
+497:    selections = repmat(struct('outputIndex',NaN,'core',struct(),'bestScore',struct(), ...
+499:        'complexityRanking',struct([]),'bestScoreRanking',struct([]), ...
+500:        'structureScoreRanking',struct([]), ...
+501:        'candidateCount',0,'selectionMode','pysr_native_score'), 1, numel(outs));
+505:        selections(i).bestScore = getfield_default_local(outs(i), 'selected_best_score', selections(i).core);
+508:        selections(i).selectionMode = char(string(getfield_default_local(outs(i), 'selection_mode', 'pysr_native_score')));
+512:        selections(i).bestScoreRanking = getfield_default_local(outs(i), 'external_validation_ranked_by_best_score', struct([]));
+513:        selections(i).structureScoreRanking = getfield_default_local(outs(i), 'external_validation_ranked_by_structure_score', struct([]));
+=== pysr_official_adapter.py ===
+1045:            config.get('structure_machine_error_abs_mse_floor', 0.0))
+1050:            config.get('structure_machine_error_rel_mse_floor', 0.0))
+1120:        rec['structure_score'] = -1e300
+1209:            rec['structure_score'] = -1e300
+1211:            rec['structure_score'] = float(
+1219:        key=lambda i: (-float(records[i]['structure_score']),
+1244:    structure_enabled = bool(config.get('structure_score_enable', False))
+1246:        return structure_order[0], 'machine_floor_aware_soft_validation_structure_score'
+1262:        return core_idx, 'maximum_native_pysr_score'
+1302:    PySR score, or the low-cost PhDN structure score.
+1309:    elif rank_mode == 'best_score':
+1320:    elif rank_mode == 'structure_score':
+1323:                    and float(rec.get('structure_score', -1e300)) > -1e299]
+1325:            -float(records[i].get('structure_score', float('-inf'))),
+1563:    best_score_report = _make_external_candidate_report(
+1564:        records, validation_best_idx, core_idx, ranking_topk, 'best_score',
+1566:    structure_score_report = _make_external_candidate_report(
+1567:        records, validation_best_idx, core_idx, ranking_topk, 'structure_score',
+1572:        structure_score_report = sorted(
+1573:            structure_score_report,
+1577:        for rank, rec in enumerate(structure_score_report, start=1):
+1603:            best_score_report, structure_score_report, fallback_candidates, len(records))
+1692:        model_selection=str(config.get('model_selection', 'best')),
+1926:     best_score_ranking, structure_score_ranking,
+1966:        selection_mode=str(core.get('selection_rule', 'native_pysr_score')),
+1968:        selected_best_score=_strip_private_prediction_field(core),
+1975:        external_validation_ranked_by_best_score=best_score_ranking,
+1976:        external_validation_ranked_by_structure_score=structure_score_ranking,
+=== defaults ===
+unpacked/core/phdnn_default_options.m:314:	opts.stage0.pysr.modelSelection = 'best';
+unpacked/core/phdnn_default_options.m:351:	opts.stage0.pysr.structureScoreEnable = true;
+unpacked/baselines/sr/sr_default_options.m:82:    opts.modelSelection = 'best';
+unpacked/baselines/sr/sr_default_options.m:111:    opts.structureScoreEnable = false;
+unpacked/baselines/sr/sr_default_options.m:118:    opts.structureMachineErrorAbsMSEFloor = 0;
+unpacked/baselines/sr/sr_default_options.m:119:    opts.structureMachineErrorRelMSEFloor = 0;
