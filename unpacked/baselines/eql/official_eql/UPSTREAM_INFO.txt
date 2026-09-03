@@ -1,0 +1,9 @@
+Repository: https://github.com/martius-lab/EQL
+Commit: cd93824ccd330b814ddd334dd25e8b0fd5eb3f77
+Component: EQL-DIV-ICML-Python3
+License: GPL-3.0 (see LICENSE)
+
+The files under this directory are copied from the user-provided official
+repository archive and are intentionally kept unchanged.  The PhDN-specific
+adapter lives one directory above and only translates data/configuration and
+collects results.

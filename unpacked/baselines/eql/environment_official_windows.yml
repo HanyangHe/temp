@@ -1,0 +1,17 @@
+name: eql_official
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.7
+  - pip=23.3.2
+  # Theano's official Windows instructions require both GCC and a MinGW
+  # import library for the CPython DLL.  Omitting libpython causes the
+  # lazylinker undefined-reference errors seen with m2w64 GCC.
+  - m2w64-toolchain
+  - libpython
+  - pip:
+      - numpy==1.19.5
+      - scipy==1.5.4
+      - Theano==1.0.5
+      - https://github.com/Lasagne/Lasagne/archive/master.zip

@@ -1,0 +1,13 @@
+name: eql_official
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.7
+  - pip=23.3.2
+  - libpython  # used on Windows; harmlessly ignored/solved as appropriate elsewhere
+  - pip:
+      - numpy==1.19.5
+      - scipy==1.5.4
+      - Theano==1.0.5
+      - https://github.com/Lasagne/Lasagne/archive/master.zip
