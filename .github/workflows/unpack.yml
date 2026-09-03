@@ -12,8 +12,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Unpack archive and Live Scripts
         run: |
-          rm -rf unpacked mlx_unpacked
-          mkdir -p unpacked mlx_unpacked
+          rm -rf unpacked mlx_unpacked mlx_code
+          mkdir -p unpacked mlx_unpacked mlx_code
           unzip -q PHDNN_LSQ_Framework_v75_PySR2_shared_initial_guesses_full.zip -d unpacked
           for f in unpacked/run_demo_feynman_dimless.mlx unpacked/run_demo_single_generator_dynamic.mlx unpacked/run_demo_soft_saturated_lorenz96.mlx; do
             if [ -f "$f" ]; then
@@ -22,11 +22,30 @@ jobs:
               unzip -q "$f" -d "mlx_unpacked/$b" || true
             fi
           done
-          find mlx_unpacked -type f | head -200
+          python - <<'PY'
+          import os, xml.etree.ElementTree as ET
+          ns={'w':'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
+          for b in ['run_demo_feynman_dimless','run_demo_single_generator_dynamic','run_demo_soft_saturated_lorenz96']:
+              p=f'mlx_unpacked/{b}/matlab/document.xml'
+              if not os.path.exists(p):
+                  continue
+              root=ET.parse(p).getroot()
+              chunks=[]
+              for para in root.findall('.//w:p', ns):
+                  style=para.find('./w:pPr/w:pStyle',ns)
+                  if style is None or style.attrib.get('{%s}val'%ns['w'])!='code':
+                      continue
+                  text=''.join(t.text or '' for t in para.findall('.//w:t',ns))
+                  chunks.append(text)
+              with open(f'mlx_code/{b}.m','w',encoding='utf-8',newline='\n') as fh:
+                  fh.write('\n'.join(chunks))
+                  fh.write('\n')
+          PY
+          wc -l mlx_code/*.m || true
       - name: Commit extracted files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add unpacked mlx_unpacked
-          git commit -m "Extract Live Script internals for inspection" || exit 0
+          git add unpacked mlx_unpacked mlx_code
+          git commit -m "Export Live Script code for inspection" || exit 0
           git push
