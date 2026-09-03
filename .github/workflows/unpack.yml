@@ -12,36 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Generate updated files
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('tools/apply_feynman_update.py')
-          s=p.read_text(encoding='utf-8')
-          a=s.index('# Verify extracted code corresponds to XML code paragraphs')
-          b=s.index("tree.write(doc,encoding='UTF-8',xml_declaration=True)")
-          replacement=r'''# MATLAB Live Editor stores this script as one or a few code paragraphs whose
-# w:t payload can itself contain embedded newlines. Replace the primary script
-# payload directly and remove any later duplicate code payloads.
-script_paras=[p for p in root.iter(f'{{{W}}}p') if is_code(p)]
-if not script_paras:
-    raise RuntimeError('No MATLAB code paragraph found in Live Script XML.')
-primary=None
-for q in script_paras:
-    if '%% Demo: SINDy bypass' in ptext(q):
-        primary=q; break
-if primary is None:
-    primary=max(script_paras,key=lambda q: len(ptext(q)))
-settext(primary,main)
-for q in script_paras:
-    if q is primary: continue
-    # Remove only paragraphs that contain executable script content. Preserve
-    # empty/code-style layout placeholders.
-    if ptext(q).strip():
-        par=parent[q]
-        par.remove(q)
-'''
-          s=s[:a]+replacement+s[b:]
-          p.write_text(s,encoding='utf-8')
-          PY
+          python -c "from pathlib import Path; p=Path('tools/apply_feynman_update.py'); s=p.read_text(encoding='utf-8'); a=s.index('# Verify extracted code corresponds to XML code paragraphs'); b=s.index(\"tree.write(doc,encoding='UTF-8',xml_declaration=True)\"); rep=\"# Live Editor stores the script inside code paragraph payloads with embedded newlines.\\nscript_paras=[q for q in root.iter(f'{{{W}}}p') if is_code(q)]\\nif not script_paras: raise RuntimeError('No MATLAB code paragraph found in Live Script XML.')\\nprimary=next((q for q in script_paras if '%% Demo: SINDy bypass' in ptext(q)), max(script_paras,key=lambda q:len(ptext(q))))\\nsettext(primary,main)\\nfor q in script_paras:\\n    if q is not primary and ptext(q).strip(): parent[q].remove(q)\\n\"; p.write_text(s[:a]+rep+s[b:],encoding='utf-8')"
           python tools/apply_feynman_update.py
           python -m py_compile deliverables/baselines/sr/pysr_official_adapter.py
           unzip -t deliverables/run_demo_feynman_dimless.mlx
@@ -50,7 +21,7 @@ for q in script_paras:
       - name: Commit deliverables
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+HanyangHe@users.noreply.github.com"
           git add deliverables Feynman_original_PySR_score_update.zip
           git commit -m "Build Feynman original PySR score update" || exit 0
           git push
