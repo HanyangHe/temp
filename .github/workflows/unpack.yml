@@ -1,0 +1,25 @@
+name: Unpack PhDN archive
+on:
+  push:
+    branches: [chatgpt-unpack-feynman]
+permissions:
+  contents: write
+jobs:
+  unpack:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack archive
+        run: |
+          rm -rf unpacked
+          mkdir -p unpacked
+          unzip -q PHDNN_LSQ_Framework_v75_PySR2_shared_initial_guesses_full.zip -d unpacked
+          find unpacked -type f | head -100
+      - name: Commit unpacked files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add unpacked
+          git commit -m "Unpack PhDN archive for inspection" || exit 0
+          git push
